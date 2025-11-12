@@ -14,3 +14,9 @@ To start the PostgreSQL service, run the following command in the terminal:
 ```bash
 docker-compose up -d
 ```
+
+to get into the postgres container, run:
+
+```bash
+docker exec -it my_postgres_db psql -U your_username -d your_database_name
+```
