@@ -20,3 +20,26 @@ to get into the postgres container, run:
 ```bash
 docker exec -it my_postgres_db psql -U your_username -d your_database_name
 ```
+
+# To start the backend server
+
+## virtual environment
+Create a virtual environment and activate it:
+
+```bash
+python -m venv DB_env
+source DB_env/bin/activate # On Windows use `DB_env\Scripts\activate`
+```
+## Install dependencies
+Install the required Python packages using pip:
+```bash
+pip install -r requirements.txt
+```
+
+## Start the server
+Run the FastAPI server using Uvicorn:
+```bash
+uvicorn app.main:app --reload
+```
+The server will be accessible at `http://127.0.0.1:8000`
+
