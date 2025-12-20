@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base  
@@ -29,3 +29,10 @@ class Item(Base):
     status = Column(Boolean, nullable=False, default=True)  # 0: unavailable, 1: available
     desired_item = Column(String, nullable=True)  # for exchange items
     total_images = Column(Integer, default=0, nullable=False)
+
+class ItemImage(Base):
+    __tablename__ = "item_images"
+
+    image_id = Column(Integer, primary_key=True, index=True)
+    item_id = Column(Integer, ForeignKey("items.item_id", ondelete="CASCADE"), nullable=False)
+    image_data = Column(LargeBinary, nullable=False)
