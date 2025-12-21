@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
@@ -60,6 +61,7 @@ class ItemCreate(BaseModel):
     desired_item: Optional[str] = Field(None, description="The desired item for exchange if applicable.")
     category: int = Field(..., description="The category ID of the item.")
     total_images: int = Field(0, ge=0, description="The total number of images for the item.")
+    images: Optional[List[UploadFile]] = Field(None, description="Image files associated with the item.")
 
 class ItemResponse(BaseModel):
     """
@@ -77,3 +79,5 @@ class ItemResponse(BaseModel):
     desired_item: Optional[str]
     total_images: int
     category: int
+    images: Optional[List[str]] = Field(None, description="List of image paths for the item.")
+    

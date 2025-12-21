@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from argon2 import PasswordHasher
 from . import models, schemas
 from .database import get_db
 from .auth import authenticate_user, get_token, verify_token
-
+import uuid
+import os
 router = APIRouter()
+
+UPLOAD_DIRECTORY = "./uploads"
+os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
 """
 -----------------------------
@@ -145,4 +150,149 @@ def update_user(user_id: int, user_in: schemas.ModifyUser, db: Session = Depends
         Item Routes
 -----------------------------
 """
+
+@router.post("/items/", response_model=schemas.ItemResponse, status_code=status.HTTP_201_CREATED)
+def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Create a new item.
+    """
+
+    if(len(item.images) > 3):
+        raise HTTPException(status_code=400, detail="Maximum 3 images allowed per item")
+
+    img_paths = []
+    for img in item.images:
+        if(img.content_type not in ["image/jpeg", "image/png"]):
+            raise HTTPException(status_code=400, detail="Invalid image format. Only JPEG and PNG are allowed.")
+        file_ext = img.filename.split(".")[-1]
+        unique_name = f"{uuid.uuid4()}.{file_ext}"
+        save_path = os.path.join(UPLOAD_DIRECTORY, unique_name)
+        
+        with open(save_path, "wb") as buffer:
+            content = img.read()
+            buffer.write(content)
+        
+        img_paths.append(f"/{UPLOAD_DIRECTORY}/{unique_name}")
+
+    new_item = models.Item(
+        title=item.title,
+        description=item.description,
+        condition=item.condition,
+        owner_id=token['user_id'],
+        price=item.price,
+        exchange_type=item.exchange_type,
+        status=item.status,
+        desired_item=item.desired_item,
+        category=item.category
+    )
+    
+    existing_category = db.query(models.Category).filter(models.Category.category_id == item.category).first()
+    if not existing_category:
+        # Create the category on the fly when the provided category_id does not exist
+        new_category = models.Category(
+            category_id=item.category,
+            category_name=item.category
+        )
+        db.add(new_category)
+
+    for path in img_paths:
+        new_image = models.ItemImage(
+            image_data_name=path,
+            item=new_item
+        )
+        db.add(new_image)
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+    
+    return schemas.ItemResponse(
+        item_id=new_item.item_id,
+        title=new_item.title,
+        description=new_item.description,
+        condition=new_item.condition,
+        owner_id=new_item.owner_id,
+        post_date=new_item.post_date,
+        price=new_item.price,
+        exchange_type=new_item.exchange_type,
+        status=new_item.status,
+        desired_item=new_item.desired_item,
+        total_images=len(img_paths),
+        category=new_item.category,
+        images=img_paths
+    )
+
+@router.get("/items/{item_id}", response_model=schemas.ItemResponse)
+def read_item(item_id: int, db: Session = Depends(get_db)):
+    """
+    Get item by ID.
+    """
+    db_item = db.query(models.Item).filter(models.Item.item_id == item_id).first()
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    images = db.query(models.ItemImage).filter(models.ItemImage.item_id == item_id).all()
+    image_paths = [img.image_data_name for img in images]
+    
+    return schemas.ItemResponse(
+        item_id=db_item.item_id,
+        title=db_item.title,
+        description=db_item.description,
+        condition=db_item.condition,
+        owner_id=db_item.owner_id,
+        post_date=db_item.post_date,
+        price=db_item.price,
+        exchange_type=db_item.exchange_type,
+        status=db_item.status,
+        desired_item=db_item.desired_item,
+        total_images=db_item.total_images,
+        category=db_item.category,
+        images=image_paths
+    )
+
+@router.get("/items/", response_model=List[schemas.ItemResponse])
+def read_items(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    """
+    Get a list of items with pagination.
+    """
+    items = db.query(models.Item).offset(skip).limit(limit).all()
+    result = []
+    for item in items:
+        images = db.query(models.ItemImage).filter(models.ItemImage.item_id == item.item_id).all()
+        image_paths = [img.image_data_name for img in images]
+        result.append(
+            schemas.ItemResponse(
+                item_id=item.item_id,
+                title=item.title,
+                description=item.description,
+                condition=item.condition,
+                owner_id=item.owner_id,
+                post_date=item.post_date,
+                price=item.price,
+                exchange_type=item.exchange_type,
+                status=item.status,
+                desired_item=item.desired_item,
+                total_images=item.total_images,
+                category=item.category,
+                images=image_paths
+            )
+        )
+    return result
+
+"""
+-----------------------------
+        Image Route
+-----------------------------
+"""
+
+@router.get("/images/{filename}")
+def get_image(filename: str):
+    """
+    Retrieve an image file by filename.
+    """
+    file_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    return FileResponse(file_path)
 
