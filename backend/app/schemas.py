@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
+# Schemas for User operations
 class createUser(BaseModel):
     """
     Docstring for createUser
@@ -38,3 +39,11 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+class ModifyUser(BaseModel):
+    """
+    Docstring for ModifyUser
+    """
+    email: Optional[EmailStr] = Field(None, description="The new email address of the user.")
+    password: Optional[str] = Field(None, min_length=8, description="The new password for the user account.")
+    address: Optional[str] = Field(None, max_length=256, description="The new address of the user.")
+    
