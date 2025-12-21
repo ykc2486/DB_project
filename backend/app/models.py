@@ -24,6 +24,7 @@ class Item(Base):
     condition = Column(String, nullable=False)
     
     owner_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    owner = relationship("User", back_populates="items")
     
     post_date = Column(DateTime(timezone=True), server_default=func.now())
     price = Column(Integer, nullable=True)
