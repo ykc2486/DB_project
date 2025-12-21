@@ -80,4 +80,18 @@ class ItemResponse(BaseModel):
     total_images: int
     category: int
     images: Optional[List[str]] = Field(None, description="List of image paths for the item.")
-    
+
+# Schemas for wishlist operations
+class WishlistCreate(BaseModel):
+    """
+    Docstring for WishlistCreate
+    """
+    item_id: int = Field(..., description="The ID of the item to add to the wishlist.")
+
+class WishlistResponse(BaseModel):
+    """
+    Docstring for WishlistResponse
+    """
+    user_id: int
+    item_id: int
+    added_date: datetime
