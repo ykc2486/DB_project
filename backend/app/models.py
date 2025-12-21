@@ -47,10 +47,10 @@ class Category(Base): # delete parent category idea
     category_id = Column(Integer, primary_key=True, index=True)
     category_name = Column(String, unique=True, nullable=False)
 
-class Whishlist(Base):
-    __tablename__ = "whishlist"
+class Wishlist(Base):
+    __tablename__ = "wishlist"
 
-    whishlist_id = Column(Integer, primary_key=True, index=True)
+    wishlist_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     item_id = Column(Integer, ForeignKey("items.item_id", ondelete="CASCADE"), nullable=False)
     added_date = Column(DateTime(timezone=True), server_default=func.now())
