@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 from argon2 import PasswordHasher
+from datetime import datetime
 from . import models, schemas
 from .database import get_db
 from .auth import authenticate_user, get_token, verify_token
@@ -125,7 +126,8 @@ def update_user(user_id: int, user_in: schemas.ModifyUser, db: Session = Depends
     if user_in.email:
         db_user.email = user_in.email
     if user_in.password:
-        db_user.password_hash = user_in.password + "_hashed_secret"
+        ph = PasswordHasher()
+        db_user.password_hash = ph.hash(user_in.password)
     if user_in.address:
         db_user.address = user_in.address
         
@@ -191,7 +193,7 @@ def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db), token: 
         # Create the category on the fly when the provided category_id does not exist
         new_category = models.Category(
             category_id=item.category,
-            category_name=item.category
+            category_name=str(item.category)
         )
         db.add(new_category)
 
@@ -375,6 +377,155 @@ def remove_from_wishlist(item_id: int, db: Session = Depends(get_db), token: str
 -----------------------------
 """
 
+@router.post("/transactions/", response_model=schemas.TransactionResponse, status_code=status.HTTP_201_CREATED)
+def create_transaction(transaction_in: schemas.TransactionCreate, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Create a new transaction.
+    """
+    item = db.query(models.Item).filter(models.Item.item_id == transaction_in.item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    if item.owner_id == token['user_id']:
+        raise HTTPException(status_code=400, detail="Cannot buy your own item")
 
+    if not item.status:
+         raise HTTPException(status_code=400, detail="Item is not available")
+
+    new_transaction = models.Transaction(
+        item_id=transaction_in.item_id,
+        buyer_id=token['user_id'],
+        seller_id=item.owner_id,
+        status="pending"
+    )
+    
+    db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+    
+    return schemas.TransactionResponse(
+        transaction_id=new_transaction.transaction_id,
+        item_id=new_transaction.item_id,
+        buyer_id=new_transaction.buyer_id,
+        seller_id=new_transaction.seller_id,
+        transaction_date=new_transaction.transaction_date,
+        status=new_transaction.status,
+        completion_date=new_transaction.completion_date
+    )
+
+@router.get("/transactions/", response_model=List[schemas.TransactionResponse])
+def get_transactions(db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Get transactions for the current user.
+    """
+    user_id = token['user_id']
+    transactions = db.query(models.Transaction).filter(
+        (models.Transaction.buyer_id == user_id) | (models.Transaction.seller_id == user_id)
+    ).all()
+    
+    result = []
+    for t in transactions:
+        result.append(schemas.TransactionResponse(
+            transaction_id=t.transaction_id,
+            item_id=t.item_id,
+            buyer_id=t.buyer_id,
+            seller_id=t.seller_id,
+            transaction_date=t.transaction_date,
+            status=t.status,
+            completion_date=t.completion_date
+        ))
+    return result
+
+@router.put("/transactions/{transaction_id}", response_model=schemas.TransactionResponse)
+def update_transaction(transaction_id: int, trans_in: schemas.TransactionUpdate, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Update transaction status.
+    """
+    transaction = db.query(models.Transaction).filter(models.Transaction.transaction_id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+        
+    if token['user_id'] not in [transaction.buyer_id, transaction.seller_id]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    transaction.status = trans_in.status
+    if trans_in.status == "completed":
+        transaction.completion_date = datetime.now()
+        # Mark item as sold/unavailable
+        item = db.query(models.Item).filter(models.Item.item_id == transaction.item_id).first()
+        if item:
+            item.status = False 
+
+    db.commit()
+    db.refresh(transaction)
+    
+    return schemas.TransactionResponse(
+        transaction_id=transaction.transaction_id,
+        item_id=transaction.item_id,
+        buyer_id=transaction.buyer_id,
+        seller_id=transaction.seller_id,
+        transaction_date=transaction.transaction_date,
+        status=transaction.status,
+        completion_date=transaction.completion_date
+    )
+
+"""
+-----------------------------
+        Message Routes
+-----------------------------
+"""
+
+@router.post("/messages/", response_model=schemas.MessageResponse, status_code=status.HTTP_201_CREATED)
+def send_message(msg_in: schemas.MessageCreate, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Send a message.
+    """
+    receiver = db.query(models.User).filter(models.User.user_id == msg_in.receiver_id).first()
+    if not receiver:
+        raise HTTPException(status_code=404, detail="Receiver not found")
+
+    new_message = models.Message(
+        sender_id=token['user_id'],
+        receiver_id=msg_in.receiver_id,
+        content=msg_in.content,
+        item_id=msg_in.item_id
+    )
+    
+    db.add(new_message)
+    db.commit()
+    db.refresh(new_message)
+    
+    return schemas.MessageResponse(
+        message_id=new_message.message_id,
+        sender_id=new_message.sender_id,
+        receiver_id=new_message.receiver_id,
+        content=new_message.content,
+        sent_at=new_message.sent_at,
+        is_read=new_message.is_read,
+        item_id=new_message.item_id
+    )
+
+@router.get("/messages/", response_model=List[schemas.MessageResponse])
+def get_messages(db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Get all messages for the current user.
+    """
+    user_id = token['user_id']
+    messages = db.query(models.Message).filter(
+        (models.Message.sender_id == user_id) | (models.Message.receiver_id == user_id)
+    ).order_by(models.Message.sent_at.desc()).all()
+    
+    result = []
+    for m in messages:
+        result.append(schemas.MessageResponse(
+            message_id=m.message_id,
+            sender_id=m.sender_id,
+            receiver_id=m.receiver_id,
+            content=m.content,
+            sent_at=m.sent_at,
+            is_read=m.is_read,
+            item_id=m.item_id
+        ))
+    return result
 
 

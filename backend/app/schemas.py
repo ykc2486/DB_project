@@ -95,3 +95,49 @@ class WishlistResponse(BaseModel):
     user_id: int
     item_id: int
     added_date: datetime
+
+# Schemas for Transaction operations
+class TransactionCreate(BaseModel):
+    """
+    Docstring for TransactionCreate
+    """
+    item_id: int = Field(..., description="The ID of the item involved in the transaction.")
+
+class TransactionUpdate(BaseModel):
+    """
+    Docstring for TransactionUpdate
+    """
+    status: str = Field(..., description="The new status of the transaction.")
+
+class TransactionResponse(BaseModel):
+    """
+    Docstring for TransactionResponse
+    """
+    transaction_id: int
+    item_id: int
+    buyer_id: int
+    seller_id: int
+    transaction_date: datetime
+    status: str
+    completion_date: Optional[datetime]
+
+# Schemas for Message operations
+class MessageCreate(BaseModel):
+    """
+    Docstring for MessageCreate
+    """
+    receiver_id: int = Field(..., description="The ID of the user receiving the message.")
+    content: str = Field(..., description="The content of the message.")
+    item_id: Optional[int] = Field(None, description="Optional ID of the item related to the message.")
+
+class MessageResponse(BaseModel):
+    """
+    Docstring for MessageResponse
+    """
+    message_id: int
+    sender_id: int
+    receiver_id: int
+    content: str
+    sent_at: datetime
+    is_read: bool
+    item_id: Optional[int]
