@@ -79,5 +79,9 @@ class Message(Base):
     content = Column(Text, nullable=False)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
+class Phone(Base):
+    __tablename__ = "phones"
 
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True)
+    phone_number = Column(String, nullable=False)
     
