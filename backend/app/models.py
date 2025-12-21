@@ -83,5 +83,4 @@ class Phone(Base):
     __tablename__ = "phones"
 
     user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True)
-    phone_number = Column(String, nullable=False)
-    
+    phone_number = Column(String, primary_key=True, nullable=False)

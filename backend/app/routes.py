@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-
+from argon2 import PasswordHasher
 from . import models, schemas
 from .database import get_db
+from .auth import authenticate_user, get_token, verify_token
 
 router = APIRouter()
 
-# --- User Routes ---
+"""
+-----------------------------
+        User Routes
+-----------------------------
+"""
 
 @router.post("/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
@@ -24,12 +29,13 @@ def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
     if db_user_username:
         raise HTTPException(status_code=400, detail="Username already taken")
 
-    hashed_password = user.password + "_hashed_secret" 
+    ph = PasswordHasher()
+    hashed_password = ph.hash(user.password)
 
     new_user = models.User(
         username=user.username,
         email=user.email,
-        password_hash=user.password + "_hashed_secret",
+        password_hash=hashed_password,
         address=user.address,
     )
     
@@ -37,9 +43,7 @@ def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # Handle phones
-    # Note: The Phone model currently uses user_id as Primary Key, which might limit to one phone per user 
-    # unless the model is adjusted (e.g. composite PK or separate ID).
+    # Add phone numbers if provided
     if user.phones:
         for phone_num in user.phones:
             try:
@@ -48,11 +52,8 @@ def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
                 db.commit()
             except Exception:
                 db.rollback()
-                # In a real scenario, handle the error (e.g. duplicate phone or constraint violation)
                 pass
     
-    # Construct response
-    # Fetch phones manually since there is no relationship property in User model yet
     phones = db.query(models.Phone).filter(models.Phone.user_id == new_user.user_id).all()
     phone_list = [p.phone_number for p in phones]
 
@@ -95,16 +96,16 @@ def login(user_login: schemas.UserLogin, db: Session = Depends(get_db)):
     """
     user = db.query(models.User).filter(models.User.username == user_login.username).first()
     
-    # Verify password (placeholder - replace with actual verification)
-    if not user or user.password_hash != user_login.password + "_hashed_secret":
+    ph = PasswordHasher()
+
+    if not authenticate_user(user_login.username, user_login.password, db):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Create token (placeholder - replace with JWT generation)
-    access_token = f"fake-jwt-token-for-{user.username}"
+    access_token = get_token(user.user_id)  
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.put("/users/{user_id}", response_model=schemas.UserResponse)
@@ -138,3 +139,4 @@ def update_user(user_id: int, user_in: schemas.ModifyUser, db: Session = Depends
         address=db_user.address,
         phones=phone_list
     )
+
