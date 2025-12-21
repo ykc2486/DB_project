@@ -1,6 +1,6 @@
 services:
   postgres_db:
-    image: postgres:18-alpine 
+    image: postgres:16-alpine 
     container_name: my_postgres_db
     
     env_file: # !!! Load environment variables from .env file
@@ -10,7 +10,7 @@ services:
       - postgres_data:/var/lib/postgresql
       
     ports:
-      - "5432:5432"
+      - "5433:5432" # avoid conflict with local Postgres
       
     restart: unless-stopped
 
