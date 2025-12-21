@@ -22,14 +22,17 @@ class Item(Base):
     title = Column(String, index=True, nullable=False)
     description = Column(Text, nullable=True)
     condition = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, ondelete="CASCADE")
+    
+    owner_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    
     post_date = Column(DateTime(timezone=True), server_default=func.now())
     price = Column(Integer, nullable=True)
     exchange_type = Column(Boolean, nullable=False)  # 0: sell, 1: exchange
     status = Column(Boolean, nullable=False, default=True)  # 0: unavailable, 1: available
     desired_item = Column(String, nullable=True)  # for exchange items
     total_images = Column(Integer, default=0, nullable=False)
-    category = Column(ForeignKey("categories.category_id"), Integer, nullable=False)
+    
+    category = Column(Integer, ForeignKey("categories.category_id"), nullable=False)
 
 class ItemImage(Base):
     __tablename__ = "item_images"

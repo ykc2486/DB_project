@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 from . import database  
+from . import models
 
 # Lifespan event to initialize the database on startup
 @asynccontextmanager
