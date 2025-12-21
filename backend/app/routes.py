@@ -296,3 +296,76 @@ def get_image(filename: str):
     
     return FileResponse(file_path)
 
+
+"""
+-----------------------------
+        Wishlist Routes
+-----------------------------
+"""
+
+@router.post("/wishlist/", response_model=schemas.WishlistResponse, status_code=status.HTTP_201_CREATED)
+def add_to_wishlist(wishlist_in: schemas.WishlistCreate, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Add an item to the user's wishlist.
+    """
+    existing_entry = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == token['user_id'],
+        models.Wishlist.item_id == wishlist_in.item_id
+    ).first()
+    
+    if existing_entry:
+        raise HTTPException(status_code=400, detail="Item already in wishlist")
+    
+    new_wishlist_entry = models.Wishlist(
+        user_id=token['user_id'],
+        item_id=wishlist_in.item_id
+    )
+    
+    db.add(new_wishlist_entry)
+    db.commit()
+    db.refresh(new_wishlist_entry)
+    
+    return schemas.WishlistResponse(
+        wishlist_id=new_wishlist_entry.wishlist_id,
+        user_id=new_wishlist_entry.user_id,
+        item_id=new_wishlist_entry.item_id,
+        added_date=new_wishlist_entry.added_date
+    )
+
+@router.get("/wishlist/", response_model=List[schemas.WishlistResponse])
+def get_wishlist(db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Get the user's wishlist.
+    """
+    wishlist_entries = db.query(models.Wishlist).filter(models.Wishlist.user_id == token['user_id']).all()
+    
+    result = []
+    for entry in wishlist_entries:
+        result.append(
+            schemas.WishlistResponse(
+                wishlist_id=entry.wishlist_id,
+                user_id=entry.user_id,
+                item_id=entry.item_id,
+                added_date=entry.added_date
+            )
+        )
+    return result
+
+@router.delete("/wishlist/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_from_wishlist(item_id: int, db: Session = Depends(get_db), token: str = Depends(verify_token)):
+    """
+    Remove an item from the user's wishlist.
+    """
+    wishlist_entry = db.query(models.Wishlist).filter(
+        models.Wishlist.user_id == token['user_id'],
+        models.Wishlist.item_id == item_id
+    ).first()
+    
+    if not wishlist_entry:
+        raise HTTPException(status_code=404, detail="Item not found in wishlist")
+    
+    db.delete(wishlist_entry)
+    db.commit()
+    
+    return
+
