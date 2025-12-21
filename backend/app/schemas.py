@@ -46,4 +46,34 @@ class ModifyUser(BaseModel):
     email: Optional[EmailStr] = Field(None, description="The new email address of the user.")
     password: Optional[str] = Field(None, min_length=8, description="The new password for the user account.")
     address: Optional[str] = Field(None, max_length=256, description="The new address of the user.")
-    
+
+# Schemas for Item operations
+class ItemCreate(BaseModel):
+    """
+    Docstring for ItemCreate
+    """
+    title: str = Field(..., max_length=100, description="The title of the item.")
+    description: Optional[str] = Field(None, description="The description of the item.")
+    condition: str = Field(..., max_length=50, description="The condition of the item.")
+    price: Optional[int] = Field(None, ge=0, description="The price of the item if for sale.")
+    exchange_type: bool = Field(..., description="Indicates if the item is for sale (False) or exchange (True).")
+    desired_item: Optional[str] = Field(None, description="The desired item for exchange if applicable.")
+    category: int = Field(..., description="The category ID of the item.")
+    total_images: int = Field(0, ge=0, description="The total number of images for the item.")
+
+class ItemResponse(BaseModel):
+    """
+    Docstring for ItemResponse
+    """
+    item_id: int
+    title: str
+    description: Optional[str]
+    condition: str
+    owner_id: int
+    post_date: datetime
+    price: Optional[int]
+    exchange_type: bool
+    status: bool
+    desired_item: Optional[str]
+    total_images: int
+    category: int

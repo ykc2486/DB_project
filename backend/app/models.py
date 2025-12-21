@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, LargeBinary
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base  
@@ -40,7 +40,7 @@ class ItemImage(Base):
 
     image_id = Column(Integer, primary_key=True, index=True)
     item_id = Column(Integer, ForeignKey("items.item_id", ondelete="CASCADE"), nullable=False)
-    image_data = Column(LargeBinary, nullable=False)
+    image_data_name = Column(String, nullable=False, unique=True)
 
 class Category(Base): # delete parent category idea
     __tablename__ = "categories"

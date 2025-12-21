@@ -140,3 +140,9 @@ def update_user(user_id: int, user_in: schemas.ModifyUser, db: Session = Depends
         phones=phone_list
     )
 
+"""
+-----------------------------
+        Item Routes
+-----------------------------
+"""
+
