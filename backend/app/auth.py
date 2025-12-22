@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from argon2 import PasswordHasher
 from fastapi import Depends
 
@@ -8,7 +9,6 @@ import datetime
 from dotenv import load_dotenv
 
 from .database import get_db
-from . import models
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -20,7 +20,9 @@ def authenticate_user(username: str, password: str, db: Session = Depends(get_db
     """
     Authenticate user by username and password.
     """
-    user = db.query(models.User).filter(models.User.username == username).first()
+    query = text("SELECT user_id, username, password_hash FROM users WHERE username = :username")
+    user = db.execute(query, {"username": username}).fetchone()
+    
     if not user:
         return False
     
