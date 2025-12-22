@@ -23,10 +23,10 @@ export const authApi = {
         }
 
         console.log("🚀 API 準備發送的 JSON 字串:", JSON.stringify(payload));
-        
+
         const response = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
@@ -34,13 +34,13 @@ export const authApi = {
             body: JSON.stringify({
                 username: payload.username,
                 password: payload.password
-            }), 
+            }),
         });
 
         if (!response.ok) {
             const error = await response.json();
-            const msg = Array.isArray(error.detail) 
-                ? error.detail.map((e: any) => `${e.loc[e.loc.length-1]}: ${e.msg}`).join(' | ')
+            const msg = Array.isArray(error.detail)
+                ? error.detail.map((e: any) => `${e.loc[e.loc.length - 1]}: ${e.msg}`).join(' | ')
                 : error.detail;
             throw new Error(msg || '帳號或密碼錯誤');
         }
@@ -55,6 +55,20 @@ export const itemApi = {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('無法取得商品');
+        return response.json();
+    },
+
+    async create(formData: FormData) {
+        const token = localStorage.getItem('token');
+        // 關鍵：同樣走 ?token= 模式，確保後端 verify_token 抓得到
+        const response = await fetch(`${BASE_URL}/items/?token=${token}`, {
+            method: 'POST',
+            body: formData 
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '上架失敗');
+        }
         return response.json();
     }
 };

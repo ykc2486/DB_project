@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { authApi } from '$lib/api'; 
+	import { authApi } from '$lib/api';
 	import { goto } from '$app/navigation';
 
-	let isLogin = true;
+	let isLogin = true; // 切換登入或註冊
 	let username = '';
 	let password = '';
 	let email = '';
-	let address = '';
+	let fullName = '';
 	let errorMessage = '';
 	let loading = false;
 
@@ -14,59 +14,86 @@
 		errorMessage = '';
 		loading = true;
 
-		// 準備資料
-		const payload = isLogin 
-			? { username, password } 
-			: { username, email, password, address: address || "未提供", phones: [] };
-
-		console.log("📝 頁面準備傳送的物件:", payload);
-
 		try {
 			if (isLogin) {
-				const data = await authApi.login(payload);
-				if (data && data.access_token) {
-					localStorage.setItem('token', data.access_token);
-					alert('登入成功！');
-					goto('/items'); 
-				}
+				// 執行登入 (使用 FormData 格式)
+				const formData = new FormData();
+				formData.append('username', username);
+				formData.append('password', password);
+
+				const data = await authApi.login(formData);
+				localStorage.setItem('token', data.access_token);
+				alert('登入成功！');
+				goto('/items'); // 登入後跳轉到商品頁
 			} else {
-				await authApi.register(payload);
-				alert('註冊成功！');
-				isLogin = true;
+				// 執行註冊
+				await authApi.register({
+					username,
+					email,
+					password,
+					full_name: fullName
+				});
+				alert('註冊成功，請登入！');
+				isLogin = true; // 註冊完自動切換到登入畫面
 			}
 		} catch (err: any) {
-			errorMessage = err.message;
+			errorMessage = err.message || '操作失敗，請檢查帳號密碼';
 		} finally {
 			loading = false;
 		}
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-	<div class="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border">
-		<h2 class="text-3xl font-black text-center mb-8">{isLogin ? '歡迎回來' : '註冊帳號'}</h2>
+<div class="min-h-[80-vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+	<div class="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
+		<div>
+			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+				{isLogin ? '歡迎回來' : '建立新帳號'}
+			</h2>
+			<p class="mt-2 text-center text-sm text-gray-600">
+				{isLogin ? '請登入以管理您的商品' : '加入我們，開始進行二手交易'}
+			</p>
+		</div>
 
-		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
-			<div class="space-y-4">
-				<input bind:value={username} type="text" required class="block w-full px-4 py-3 border rounded-xl" placeholder="帳號">
+		<form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit}>
+			<div class="rounded-md shadow-sm space-y-4">
+				<div>
+					<label for="username" class="sr-only">帳號</label>
+					<input bind:value={username} id="username" type="text" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="帳號 (Username)">
+				</div>
+
 				{#if !isLogin}
-					<input bind:value={email} type="email" required class="block w-full px-4 py-3 border rounded-xl" placeholder="Email">
-					<input bind:value={address} type="text" class="block w-full px-4 py-3 border rounded-xl" placeholder="地址">
+					<div>
+						<input bind:value={fullName} type="text" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="全名 (Full Name)">
+					</div>
+					<div>
+						<input bind:value={email} type="email" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="電子郵件 (Email)">
+					</div>
 				{/if}
-				<input bind:value={password} type="password" required class="block w-full px-4 py-3 border rounded-xl" placeholder="密碼">
+
+				<div>
+					<label for="password" class="sr-only">密碼</label>
+					<input bind:value={password} id="password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="密碼 (Password)">
+				</div>
 			</div>
 
 			{#if errorMessage}
-				<div class="p-3 text-sm text-red-600 bg-red-50 rounded-lg">⚠️ {errorMessage}</div>
+				<div class="text-red-500 text-sm text-center bg-red-50 py-2 rounded">
+					{errorMessage}
+				</div>
 			{/if}
 
-			<button disabled={loading} type="submit" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold transition">
-				{loading ? '請稍候...' : (isLogin ? '立即登入' : '完成註冊')}
-			</button>
+			<div>
+				<button disabled={loading} type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+					{loading ? '處理中...' : (isLogin ? '登入' : '註冊')}
+				</button>
+			</div>
 		</form>
 
-		<button on:click={() => { isLogin = !isLogin; errorMessage = ''; }} class="w-full mt-4 text-center text-sm text-blue-600">
-			{isLogin ? '切換註冊' : '切換登入'}
-		</button>
+		<div class="text-center">
+			<button on:click={() => isLogin = !isLogin} class="text-sm text-blue-600 hover:text-blue-500 font-medium">
+				{isLogin ? '還沒有帳號？立即註冊' : '已經有帳號了？點此登入'}
+			</button>
+		</div>
 	</div>
 </div>
