@@ -1,0 +1,8 @@
+/* src/app.css */
+@import "tailwindcss";
+
+/* 你也可以在這裡加一些全域的字體設定 */
+body {
+    background-color: #f9fafb; /* 淺灰色背景，讓卡片更顯眼 */
+    font-family: 'Inter', sans-serif;
+}
