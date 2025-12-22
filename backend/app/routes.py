@@ -127,6 +127,19 @@ def read_items(db: Session = Depends(get_db)):
         ))
     return result
 
+@router.get("/items/{item_id}", response_model=schemas.ItemResponse)
+def read_item(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(models.Item).filter(models.Item.item_id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    imgs = db.query(models.ItemImage).filter(models.ItemImage.item_id == item_id).all()
+    return schemas.ItemResponse(
+        item_id=item.item_id, title=item.title, description=item.description,
+        condition=item.condition, owner_id=item.owner_id, post_date=item.post_date,
+        price=item.price, exchange_type=item.exchange_type, status=item.status,
+        desired_item=item.desired_item, total_images=item.total_images,
+        category=item.category, images=[img.image_data_name for img in imgs]
+    )
+
 @router.get("/images/{filename}")
 def get_image(filename: str):
     file_path = os.path.join(UPLOAD_DIRECTORY, filename)

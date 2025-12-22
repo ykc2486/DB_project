@@ -11,9 +11,11 @@
     // 上架表單變數
     let title = '';
     let description = '';
-    let price: number = 0;
+    let price: number | null = null;
     let condition = '良好';
     let category = 1;
+    let exchangeType = false; // false = 出售, true = 交換
+    let desiredItem = '';
     let files: FileList | null = null;
     let uploadLoading = false;
 
@@ -39,8 +41,12 @@
     }
 
     async function handleCreate() {
-        if (!title || price <= 0) {
-            alert('請填寫完整商品名稱與售價');
+        if (!title) {
+            alert('請填寫商品名稱');
+            return;
+        }
+        if (!exchangeType && (price === null || price < 0)) {
+            alert('出售商品請填寫有效價格');
             return;
         }
         
@@ -48,10 +54,16 @@
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
-        formData.append('price', price.toString());
         formData.append('condition', condition);
         formData.append('category', category.toString());
-        formData.append('exchange_type', 'false');
+        formData.append('exchange_type', exchangeType.toString());
+        
+        if (exchangeType) {
+            formData.append('desired_item', desiredItem);
+            formData.append('price', '0'); // 交換模式下價格設為 0
+        } else {
+            formData.append('price', price?.toString() || '0');
+        }
 
         if (files) {
             for (let i = 0; i < files.length; i++) {
@@ -63,7 +75,8 @@
             await itemApi.create(formData);
             alert('✨ 商品上架成功！');
             // 清空表單
-            title = ''; description = ''; price = 0; files = null;
+            title = ''; description = ''; price = null; desiredItem = ''; files = null;
+            exchangeType = false;
             await loadItems(); // 重新整理列表
         } catch (err: any) {
             alert('上架失敗：' + err.message);
@@ -104,26 +117,56 @@
 
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">商品名稱</label>
-                        <input bind:value={title} placeholder="你想賣什麼？" class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all" />
+                        <label for="title" class="block text-sm font-bold text-gray-700 mb-2">商品名稱</label>
+                        <input id="title" bind:value={title} placeholder="你想賣什麼？" class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">售價 (NT$)</label>
-                        <input type="number" bind:value={price} class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all font-mono font-bold text-blue-600" />
+                        <label for="transaction-type" class="block text-sm font-bold text-gray-700 mb-2">交易方式</label>
+                        <div id="transaction-type" class="flex space-x-4">
+                            <button 
+                                class="flex-1 py-3 rounded-xl font-bold border-2 transition-all {exchangeType === false ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}"
+                                on:click={() => exchangeType = false}
+                            >
+                                💰 出售
+                            </button>
+                            <button 
+                                class="flex-1 py-3 rounded-xl font-bold border-2 transition-all {exchangeType === true ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}"
+                                on:click={() => exchangeType = true}
+                            >
+                                🔄 交換
+                            </button>
+                        </div>
+                    </div>
+
+                    {#if !exchangeType}
+                        <div>
+                            <label for="price" class="block text-sm font-bold text-gray-700 mb-2">售價 (NT$)</label>
+                            <input id="price" type="number" bind:value={price} placeholder="0" class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all font-mono font-bold text-blue-600" />
+                        </div>
+                    {:else}
+                        <div>
+                            <label for="desiredItem" class="block text-sm font-bold text-gray-700 mb-2">想換什麼？</label>
+                            <input id="desiredItem" bind:value={desiredItem} placeholder="例如：PS5 遊戲片、二手相機..." class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-purple-50 outline-none transition-all" />
+                        </div>
+                    {/if}
+
+                    <div>
+                        <label for="description" class="block text-sm font-bold text-gray-700 mb-2">商品描述</label>
+                        <textarea id="description" bind:value={description} rows="4" placeholder="描述一下商品的新舊程度、使用狀況..." class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all resize-none"></textarea>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">物品狀況</label>
-                        <select bind:value={condition} class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white outline-none appearance-none cursor-pointer">
+                        <label for="condition-select" class="block text-sm font-bold text-gray-700 mb-2">物品狀況</label>
+                        <select id="condition-select" bind:value={condition} class="w-full border-gray-200 border p-4 rounded-2xl bg-gray-50 focus:bg-white outline-none appearance-none cursor-pointer">
                             <option>全新</option><option>良好</option><option>普通</option><option>損壞</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">商品照片</label>
+                        <label for="product-images" class="block text-sm font-bold text-gray-700 mb-2">商品照片</label>
                         <div class="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center hover:border-blue-400 transition-colors">
-                            <input type="file" multiple on:change={(e) => files = e.currentTarget.files} class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+                            <input id="product-images" type="file" multiple on:change={(e) => files = e.currentTarget.files} class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
                         </div>
                     </div>
                     
@@ -172,12 +215,19 @@
                                 
                                 <div class="mt-auto flex justify-between items-center pt-6 border-t border-gray-50">
                                     <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">售價</span>
-                                        <span class="text-3xl font-black text-emerald-600 tracking-tighter">
-                                            <span class="text-sm font-bold mr-0.5">NT$</span>{item.price.toLocaleString()}
-                                        </span>
+                                        {#if !item.exchange_type}
+                                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">售價</span>
+                                            <span class="text-3xl font-black text-emerald-600 tracking-tighter">
+                                                <span class="text-sm font-bold mr-0.5">NT$</span>{item.price.toLocaleString()}
+                                            </span>
+                                        {:else}
+                                            <span class="text-[10px] font-black text-purple-400 uppercase tracking-tighter mb-1">交換</span>
+                                            <span class="text-xl font-black text-purple-600 tracking-tighter truncate max-w-[150px]">
+                                                {item.desired_item || '任何物品'}
+                                            </span>
+                                        {/if}
                                     </div>
-                                    <button class="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-gray-200">
+                                    <button on:click={() => goto(`/items/${item.item_id}`)} class="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg shadow-gray-200" aria-label="View item details">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                         </svg>

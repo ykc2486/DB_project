@@ -70,5 +70,14 @@ export const itemApi = {
             throw new Error(error.detail || '上架失敗');
         }
         return response.json();
+    },
+
+    async getOne(id: string) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/items/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('無法取得商品詳情');
+        return response.json();
     }
 };

@@ -3,3 +3,4 @@ DB_env/
 _pycache_/
 *.pyc
 .vscode/
+uploads/
