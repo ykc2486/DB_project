@@ -95,6 +95,7 @@ class WishlistResponse(BaseModel):
     user_id: int
     item_id: int
     added_date: datetime
+    item: Optional[ItemResponse] = None
 
 # Schemas for Transaction operations
 class TransactionCreate(BaseModel):

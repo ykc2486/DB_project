@@ -79,5 +79,32 @@ export const itemApi = {
         });
         if (!response.ok) throw new Error('無法取得商品詳情');
         return response.json();
+    },
+
+    async addToWishlist(itemId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/wishlist/?token=${token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: itemId })
+        });
+        if (!response.ok) throw new Error('加入收藏失敗');
+        return response.json();
+    },
+
+    async getWishlist() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/wishlist/?token=${token}`);
+        if (!response.ok) throw new Error('無法取得收藏清單');
+        return response.json();
+    }
+};
+
+export const userApi = {
+    async getProfile() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/users/me?token=${token}`);
+        if (!response.ok) throw new Error('無法取得使用者資料');
+        return response.json();
     }
 };

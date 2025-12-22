@@ -37,6 +37,10 @@ def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
         db.commit()
     return read_user(new_user.user_id, db)
 
+@router.get("/users/me", response_model=schemas.UserResponse)
+def read_current_user(db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
+    return read_user(user_id, db)
+
 @router.get("/users/{user_id}", response_model=schemas.UserResponse)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.user_id == user_id).first()
@@ -155,8 +159,49 @@ def get_image(filename: str):
 def add_to_wishlist(wish_in: schemas.WishlistCreate, db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
     new_e = models.Wishlist(user_id=user_id, item_id=wish_in.item_id)
     db.add(new_e); db.commit(); db.refresh(new_e)
-    return new_e
+    
+    # Manually construct response to handle nested item images correctly
+    item_obj = db.query(models.Item).filter(models.Item.item_id == wish_in.item_id).first()
+    item_response = None
+    if item_obj:
+        imgs = db.query(models.ItemImage).filter(models.ItemImage.item_id == item_obj.item_id).all()
+        item_response = schemas.ItemResponse(
+            item_id=item_obj.item_id, title=item_obj.title, description=item_obj.description,
+            condition=item_obj.condition, owner_id=item_obj.owner_id, post_date=item_obj.post_date,
+            price=item_obj.price, exchange_type=item_obj.exchange_type, status=item_obj.status,
+            desired_item=item_obj.desired_item, total_images=item_obj.total_images,
+            category=item_obj.category, images=[img.image_data_name for img in imgs]
+        )
+
+    return schemas.WishlistResponse(
+        user_id=new_e.user_id,
+        item_id=new_e.item_id,
+        added_date=new_e.added_date,
+        item=item_response
+    )
 
 @router.get("/wishlist/", response_model=List[schemas.WishlistResponse])
 def get_wishlist(db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
-    return db.query(models.Wishlist).filter(models.Wishlist.user_id == user_id).all()
+    wishlist_items = db.query(models.Wishlist).filter(models.Wishlist.user_id == user_id).all()
+    result = []
+    for w in wishlist_items:
+        # Manually construct ItemResponse for the nested item
+        item_obj = w.item
+        item_response = None
+        if item_obj:
+            imgs = db.query(models.ItemImage).filter(models.ItemImage.item_id == item_obj.item_id).all()
+            item_response = schemas.ItemResponse(
+                item_id=item_obj.item_id, title=item_obj.title, description=item_obj.description,
+                condition=item_obj.condition, owner_id=item_obj.owner_id, post_date=item_obj.post_date,
+                price=item_obj.price, exchange_type=item_obj.exchange_type, status=item_obj.status,
+                desired_item=item_obj.desired_item, total_images=item_obj.total_images,
+                category=item_obj.category, images=[img.image_data_name for img in imgs]
+            )
+        
+        result.append(schemas.WishlistResponse(
+            user_id=w.user_id,
+            item_id=w.item_id,
+            added_date=w.added_date,
+            item=item_response
+        ))
+    return result

@@ -29,6 +29,16 @@
     function goBack() {
         goto('/items');
     }
+
+    async function handleAddToWishlist() {
+        if (!item) return;
+        try {
+            await itemApi.addToWishlist(item.item_id);
+            alert('❤️ 已加入收藏！');
+        } catch (err: any) {
+            alert('加入失敗：' + err.message);
+        }
+    }
 </script>
 
 <div class="min-h-screen bg-gray-50 p-4 md:p-12">
@@ -123,9 +133,14 @@
                                 </div>
                             </div>
 
-                            <button class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all active:translate-y-0">
-                                聯絡賣家
-                            </button>
+                            <div class="flex space-x-4">
+                                <button on:click={handleAddToWishlist} class="flex-1 py-4 bg-pink-50 text-pink-600 rounded-2xl font-bold text-lg border border-pink-100 hover:bg-pink-100 transition-all">
+                                    加入收藏
+                                </button>
+                                <button class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all active:translate-y-0">
+                                    聯絡賣家
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
