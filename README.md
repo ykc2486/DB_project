@@ -4,11 +4,11 @@
 - frontend is Svelte + TS + Tailwind CSS
 
 # To run backend
-before running backend get into your .venv then run `pip install -r requirements.txt`
-run `docker compose down -v` in `/backend`
-then run `docker compose up -d`
-finally run your fastapi 
-for api docs `localhost:8000/docs`
+1. before running backend get into your .venv then run `pip install -r requirements.txt`
+2. run `docker compose down -v` in `/backend`
+3. then run `docker compose up -d`
+4. finally run your fastapi 
+5. for api docs `localhost:8000/docs`
 
 # To run frontend
 1. install node.js
