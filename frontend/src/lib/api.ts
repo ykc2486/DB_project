@@ -108,3 +108,64 @@ export const userApi = {
         return response.json();
     }
 };
+
+export const transactionApi = {
+    async create(itemId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/transactions/?token=${token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: itemId })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || '交易建立失敗');
+        }
+        return response.json();
+    },
+
+    async getAll() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/transactions/?token=${token}`);
+        if (!response.ok) throw new Error('無法取得交易紀錄');
+        return response.json();
+    },
+
+    async updateStatus(transactionId: number, status: string) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/transactions/${transactionId}?token=${token}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        if (!response.ok) throw new Error('更新狀態失敗');
+        return response.json();
+    }
+};
+
+export const messageApi = {
+    async send(receiverId: number, content: string) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/messages/?token=${token}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receiver_id: receiverId, content })
+        });
+        if (!response.ok) throw new Error('訊息發送失敗');
+        return response.json();
+    },
+
+    async getHistory(otherUserId: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/messages/${otherUserId}?token=${token}`);
+        if (!response.ok) throw new Error('無法取得訊息紀錄');
+        return response.json();
+    },
+
+    async getConversations() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/conversations/?token=${token}`);
+        if (!response.ok) throw new Error('無法取得對話列表');
+        return response.json();
+    }
+};

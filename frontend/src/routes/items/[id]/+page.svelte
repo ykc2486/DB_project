@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
-    import { itemApi } from '$lib/api';
+    import { itemApi, transactionApi } from '$lib/api';
     import { goto } from '$app/navigation';
 
     let item: any = null;
@@ -38,6 +38,23 @@
         } catch (err: any) {
             alert('加入失敗：' + err.message);
         }
+    }
+
+    async function handleTransaction() {
+        if (!item) return;
+        if (!confirm('確定要發起交易嗎？')) return;
+        try {
+            await transactionApi.create(item.item_id);
+            alert('交易請求已發送！');
+            goto('/transactions');
+        } catch (err: any) {
+            alert('交易失敗：' + err.message);
+        }
+    }
+
+    function handleContact() {
+        if (!item) return;
+        goto(`/messages/${item.owner_id}`);
     }
 </script>
 
@@ -137,8 +154,11 @@
                                 <button on:click={handleAddToWishlist} class="flex-1 py-4 bg-pink-50 text-pink-600 rounded-2xl font-bold text-lg border border-pink-100 hover:bg-pink-100 transition-all">
                                     加入收藏
                                 </button>
-                                <button class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all active:translate-y-0">
+                                <button on:click={handleContact} class="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg border border-gray-200 hover:bg-gray-200 transition-all">
                                     聯絡賣家
+                                </button>
+                                <button on:click={handleTransaction} class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all active:translate-y-0">
+                                    {item.exchange_type ? '提出交換' : '立即購買'}
                                 </button>
                             </div>
                         </div>
