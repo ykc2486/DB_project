@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { itemApi, userApi } from '$lib/api'; // 修正：導入 userApi 以取得目前使用者身份
 	import { goto } from '$app/navigation';
-
+	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	// 狀態變數
 	let items: any[] = [];
 	let loading = true;
@@ -368,7 +368,7 @@
 							<div class="relative h-56 overflow-hidden bg-gray-100">
 								{#if item.images && item.images.length > 0}
 									<img
-										src={`http://localhost:8000${item.images[0]}`}
+										src={`${PUBLIC_BACKEND_URL}${item.images[0]}`}
 										class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
 										alt={item.title}
 									/>
@@ -422,6 +422,7 @@
 										<button
 											on:click={() => goto(`/items/${item.item_id}`)}
 											class="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900 text-white shadow-sm transition-all hover:bg-blue-600"
+											aria-label="View item details"
 											><svg
 												xmlns="http://www.w3.org/2000/svg"
 												class="h-5 w-5"

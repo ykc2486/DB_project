@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { messageApi } from '$lib/api';
+	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 	let conversations: any[] = [];
 	let error = '';
@@ -53,7 +54,7 @@
 					</div>
 					{#if conv.item_image}
 						<img
-							src={`http://localhost:8000${conv.item_image}`}
+							src={`${PUBLIC_BACKEND_URL}${conv.item_image}`}
 							class="h-16 w-16 rounded-xl border border-gray-100 object-cover"
 							alt="item"
 						/>
