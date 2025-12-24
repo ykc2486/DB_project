@@ -102,13 +102,7 @@ class TransactionCreate(BaseModel):
     """
     Docstring for TransactionCreate
     """
-    item_id: int = Field(..., description="The ID of the item involved in the transaction.")
-
-class TransactionUpdate(BaseModel):
-    """
-    Docstring for TransactionUpdate
-    """
-    status: str = Field(..., description="The new status of the transaction.")
+    item_id: int = Field(..., description="The ID of the item to transact.")
 
 class TransactionResponse(BaseModel):
     """
@@ -121,6 +115,13 @@ class TransactionResponse(BaseModel):
     transaction_date: datetime
     status: str
     completion_date: Optional[datetime]
+    item: Optional[ItemResponse] = None
+
+class TransactionUpdate(BaseModel):
+    """
+    Docstring for TransactionUpdate
+    """
+    status: str = Field(..., description="The new status of the transaction (e.g., completed, cancelled).")
 
 # Schemas for Message operations
 class MessageCreate(BaseModel):
@@ -140,5 +141,16 @@ class MessageResponse(BaseModel):
     receiver_id: int
     content: str
     sent_at: datetime
-    is_read: bool
-    item_id: Optional[int]
+    is_read: bool = False
+    item_id: Optional[int] = None
+
+class ItemUpdate(BaseModel):
+    """
+    用於更新商品的 Schema
+    """
+    title: str = Field(..., max_length=100)
+    description: Optional[str] = Field(None)
+    condition: str = Field(..., max_length=50)
+    price: int = Field(0, ge=0)
+    exchange_type: bool
+    desired_item: Optional[str] = Field(None)
