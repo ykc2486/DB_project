@@ -12,6 +12,7 @@
 		try {
 			loading = true;
 			conversations = await messageApi.getConversations();
+			console.log('Conversations data:', conversations); // Debug: 請在 Console 確認 item_id 是否存在或名稱不同
 		} catch (e: any) {
 			error = e.message;
 		} finally {
@@ -38,9 +39,9 @@
 	{:else}
 		<div class="grid gap-4">
 			{#each conversations as conv}
-				<!-- 修改 href 邏輯，確保參數正確傳遞 -->
+				<!-- 修改 href 邏輯：改回底線連接，並處理 item_id 可能為空的情況 -->
 				<a
-					href="/messages/{conv.user_id}?itemId={conv.item_id}"
+					href={conv.item_id ? `/messages/${conv.user_id}_${conv.item_id}` : `/messages/${conv.user_id}`}
 					class="flex items-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
 				>
 					<div
