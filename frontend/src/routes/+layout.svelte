@@ -3,7 +3,7 @@
 	import { afterNavigate, goto } from '$app/navigation'; // 導入導覽監聽工具
 	import '../app.css';
 
-	let isLoggedIn = false; // 追蹤登入狀態
+	let isLoggedIn = false; // 
 
 	// 定義檢查登入狀態的函式
 	function checkLoginStatus() {
