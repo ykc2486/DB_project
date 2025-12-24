@@ -38,8 +38,9 @@
 	{:else}
 		<div class="grid gap-4">
 			{#each conversations as conv}
+				<!-- 修改 href 邏輯，確保參數正確傳遞 -->
 				<a
-					href="/messages/{conv.user_id}_{conv.item_id}"
+					href="/messages/{conv.user_id}?itemId={conv.item_id}"
 					class="flex items-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md"
 				>
 					<div
