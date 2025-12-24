@@ -137,6 +137,24 @@ export const userApi = {
         const response = await fetch(`${BASE_URL}/users/me?token=${token}`);
         if (!response.ok) throw new Error('無法取得使用者資料');
         return response.json();
+    },
+    // --- 新增更新方法 ---
+    async updateProfile(profileData: any) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/users/me?token=${token}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(profileData)
+        });
+        if (!response.ok) throw new Error('更新個人檔案失敗');
+        return response.json();
+    },
+
+    async read_user_by_id(id: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/users/${id}?token=${token}`);
+        if (!response.ok) throw new Error('無法取得該用戶資料');
+        return response.json();
     }
 };
 
@@ -184,20 +202,21 @@ export const transactionApi = {
 };
 
 export const messageApi = {
-    async send(receiverId: number, content: string) {
+    async send(receiverId: number, content: string, itemId: number) {
         const token = localStorage.getItem('token');
         const response = await fetch(`${BASE_URL}/messages/?token=${token}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ receiver_id: receiverId, content })
+            body: JSON.stringify({ receiver_id: receiverId, content, item_id: itemId })
         });
         if (!response.ok) throw new Error('訊息發送失敗');
         return response.json();
     },
 
-    async getHistory(otherUserId: number) {
+    // 修正：增加 itemId 參數，並傳遞給後端
+    async getHistory(otherUserId: number, itemId: number) {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${BASE_URL}/messages/${otherUserId}?token=${token}`);
+        const response = await fetch(`${BASE_URL}/messages/${otherUserId}?token=${token}&item_id=${itemId}`);
         if (!response.ok) throw new Error('無法取得訊息紀錄');
         return response.json();
     },
