@@ -3,7 +3,8 @@
     import { itemApi } from '$lib/api';
     import { goto } from '$app/navigation';
     import { PUBLIC_BACKEND_URL } from '$env/static/public';
-
+    import { getFullImageUrl } from '$lib/api';
+    
     let wishlistItems: any[] = [];
     let loading = true;
     let error = '';
@@ -69,7 +70,7 @@
                     <button type="button" class="group bg-white rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col cursor-pointer" on:click={() => goto(`/items/${item.item_id}`)} aria-label={`View details for ${item.title}`}>
                         <div class="h-48 bg-gray-100 relative overflow-hidden">
                             {#if item.images && item.images.length > 0}
-                                <img src={`${PUBLIC_BACKEND_URL}${item.images[0]}`} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={item.title} />
+                                <img src={`${getFullImageUrl(item.images[0])}`} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={item.title} />
                             {:else}
                                 <div class="w-full h-full flex items-center justify-center text-gray-300 italic bg-gray-50">No Image</div>
                             {/if}

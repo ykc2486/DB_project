@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { itemApi, transactionApi, userApi } from '$lib/api'; // 確保導入 userApi
 	import { goto } from '$app/navigation';
-	import { PUBLIC_BACKEND_URL } from '$env/static/public';
+	import {getFullImageUrl} from '$lib/api';
 
 	let item: any = null;
 	let loading = true;
@@ -109,7 +109,7 @@
 					>
 						{#if item.images && item.images.length > 0}
 							<img
-								src={`${PUBLIC_BACKEND_URL}${item.images[activeImageIndex]}`}
+								src={`${getFullImageUrl(item.images[activeImageIndex])}`}
 								alt={item.title}
 								class="h-full max-h-[500px] w-full rounded-xl object-contain shadow-sm"
 							/>

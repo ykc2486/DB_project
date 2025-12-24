@@ -4,6 +4,18 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 // 2. 將硬編碼網址替換為變數
 const BASE_URL = PUBLIC_BACKEND_URL;
+export const getFullImageUrl = (imagePath: string) => {
+    if (!imagePath) return '';
+
+    const ROOT_URL = PUBLIC_BACKEND_URL.replace(/\/api$/, '');
+
+
+    if (imagePath.startsWith('/api')) {
+        return `${ROOT_URL}${imagePath}`;
+    }
+
+    return `${BASE_URL}${imagePath}`;
+};
 
 export const authApi = {
     async register(userData: any) {
