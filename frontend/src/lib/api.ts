@@ -1,5 +1,9 @@
 // src/lib/api.ts
-const BASE_URL = 'http://localhost:8000/api';
+// 1. 導入環境變數
+import { PUBLIC_BACKEND_URL } from '$env/static/public';
+
+// 2. 將硬編碼網址替換為變數
+const BASE_URL = PUBLIC_BACKEND_URL;
 
 export const authApi = {
     async register(userData: any) {
@@ -55,9 +59,9 @@ export const itemApi = {
         const params = new URLSearchParams();
         if (search) params.append('search', search);
         if (sort) params.append('sort', sort);
-        
+
         const url = `${BASE_URL}/items/?${params.toString()}`;
-        
+
         const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
