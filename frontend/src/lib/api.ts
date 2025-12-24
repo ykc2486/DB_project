@@ -49,9 +49,16 @@ export const authApi = {
 };
 
 export const itemApi = {
-    async getAll() {
+    async getAll(search = '', sort = '') {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${BASE_URL}/items/`, {
+        // 構建 Query String
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (sort) params.append('sort', sort);
+        
+        const url = `${BASE_URL}/items/?${params.toString()}`;
+        
+        const response = await fetch(url, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) throw new Error('無法取得商品');
@@ -63,7 +70,7 @@ export const itemApi = {
         // 關鍵：同樣走 ?token= 模式，確保後端 verify_token 抓得到
         const response = await fetch(`${BASE_URL}/items/?token=${token}`, {
             method: 'POST',
-            body: formData 
+            body: formData
         });
         if (!response.ok) {
             const error = await response.json();
@@ -96,6 +103,26 @@ export const itemApi = {
         const token = localStorage.getItem('token');
         const response = await fetch(`${BASE_URL}/wishlist/?token=${token}`);
         if (!response.ok) throw new Error('無法取得收藏清單');
+        return response.json();
+    },
+
+    async update(id: number, itemData: any) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/items/${id}?token=${token}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(itemData)
+        });
+        if (!response.ok) throw new Error('更新商品失敗');
+        return response.json();
+    },
+
+    async delete(id: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/items/${id}?token=${token}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('刪除商品失敗');
         return response.json();
     }
 };
@@ -139,6 +166,15 @@ export const transactionApi = {
             body: JSON.stringify({ status })
         });
         if (!response.ok) throw new Error('更新狀態失敗');
+        return response.json();
+    },
+
+    async delete(id: number) {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/transactions/${id}?token=${token}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('刪除紀錄失敗');
         return response.json();
     }
 };

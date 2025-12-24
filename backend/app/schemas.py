@@ -144,3 +144,13 @@ class MessageResponse(BaseModel):
     is_read: bool = False
     item_id: Optional[int] = None
 
+class ItemUpdate(BaseModel):
+    """
+    用於更新商品的 Schema
+    """
+    title: str = Field(..., max_length=100)
+    description: Optional[str] = Field(None)
+    condition: str = Field(..., max_length=50)
+    price: int = Field(0, ge=0)
+    exchange_type: bool
+    desired_item: Optional[str] = Field(None)

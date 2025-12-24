@@ -147,11 +147,37 @@ def create_item(
     )
 
 @router.get("/items/", response_model=List[schemas.ItemResponse])
-def read_items(db: Session = Depends(get_db)):
-    items = db.execute(text("SELECT * FROM items WHERE status = true")).fetchall()
+def read_items(
+    db: Session = Depends(get_db), 
+    search: Optional[str] = None, 
+    sort: Optional[str] = None
+):
+    # 基礎 SQL 語句
+    sql_str = "SELECT * FROM items WHERE status = true"
+    params = {}
+
+    # 實作 Search/Filter 功能 (使用 LIKE 進行模糊搜尋)
+    if search:
+        sql_str += " AND (title LIKE :search OR description LIKE :search)"
+        params["search"] = f"%{search}%"
+
+    # 實作 Sort 功能
+    if sort == "price_asc":
+        sql_str += " ORDER BY price ASC"
+    elif sort == "price_desc":
+        sql_str += " ORDER BY price DESC"
+    else:
+        # 預設按日期排序 (最新上架)
+        sql_str += " ORDER BY post_date DESC"
+
+    # 執行原生 SQL
+    items = db.execute(text(sql_str), params).fetchall()
+    
     result = []
     for i in items:
-        imgs = db.execute(text("SELECT image_data_name FROM item_images WHERE item_id = :item_id"), {"item_id": i.item_id}).fetchall()
+        # 取得圖片的 SQL 保持不變
+        imgs = db.execute(text("SELECT image_data_name FROM item_images WHERE item_id = :item_id"), 
+                          {"item_id": i.item_id}).fetchall()
         result.append(schemas.ItemResponse(
             item_id=i.item_id, title=i.title, description=i.description,
             condition=i.condition, owner_id=i.owner_id, post_date=i.post_date,
@@ -466,3 +492,95 @@ def get_conversations(db: Session = Depends(get_db), user_id: int = Depends(veri
             address=u.address, phones=[p.phone_number for p in phones]
         ))
     return result
+
+"""
+-----------------------------
+        Item Update & Delete
+-----------------------------
+"""
+
+@router.put("/items/{item_id}")
+def update_item(
+    item_id: int, 
+    item_update: schemas.ItemUpdate, 
+    db: Session = Depends(get_db), 
+    user_id: int = Depends(verify_token)
+):
+    # 1. 權限檢查：使用原生 SQL 確認商品是否存在且屬於目前使用者
+    check_query = text("SELECT owner_id FROM items WHERE item_id = :item_id")
+    item = db.execute(check_query, {"item_id": item_id}).fetchone()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="找不到該商品")
+    if item.owner_id != user_id:
+        raise HTTPException(status_code=403, detail="您沒有權限修改此商品")
+
+    # 2. 執行更新：使用原生 SQL UPDATE 語法
+    update_query = text("""
+        UPDATE items 
+        SET title = :title, 
+            description = :description, 
+            condition = :condition, 
+            price = :price, 
+            exchange_type = :exchange_type, 
+            desired_item = :desired_item
+        WHERE item_id = :item_id
+    """)
+    
+    db.execute(update_query, {
+        "title": item_update.title,
+        "description": item_update.description,
+        "condition": item_update.condition,
+        "price": item_update.price,
+        "exchange_type": item_update.exchange_type,
+        "desired_item": item_update.desired_item,
+        "item_id": item_id
+    })
+    db.commit()
+    
+    return {"message": "商品資訊已成功更新"}
+
+
+@router.delete("/items/{item_id}")
+def delete_item(
+    item_id: int, 
+    db: Session = Depends(get_db), 
+    user_id: int = Depends(verify_token)
+):
+    # 1. 權限檢查
+    check_query = text("SELECT owner_id FROM items WHERE item_id = :item_id")
+    item = db.execute(check_query, {"item_id": item_id}).fetchone()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="找不到該商品")
+    if item.owner_id != user_id:
+        raise HTTPException(status_code=403, detail="您沒有權限刪除此商品")
+
+    # 2. 執行刪除：先刪除關聯的圖片紀錄（避免外鍵衝突），再刪除商品本身
+    db.execute(text("DELETE FROM item_images WHERE item_id = :item_id"), {"item_id": item_id})
+    db.execute(text("DELETE FROM items WHERE item_id = :item_id"), {"item_id": item_id})
+    
+    db.commit()
+    return {"message": "商品已成功刪除"}
+
+# 在 routes.py 末尾新增交易刪除功能
+@router.delete("/transactions/{transaction_id}")
+def delete_transaction(
+    transaction_id: int, 
+    db: Session = Depends(get_db), 
+    user_id: int = Depends(verify_token)
+):
+    # 權限檢查：確保只有買家或賣家可以刪除（或僅限管理權限，依需求而定）
+    # 使用原生 SQL 檢查
+    check_sql = text("SELECT buyer_id, seller_id FROM transactions WHERE transaction_id = :tid")
+    trans = db.execute(check_sql, {"tid": transaction_id}).fetchone()
+    
+    if not trans:
+        raise HTTPException(status_code=404, detail="找不到交易紀錄")
+    if user_id != trans.buyer_id and user_id != trans.seller_id:
+        raise HTTPException(status_code=403, detail="您沒有權限刪除此紀錄")
+
+    # 執行刪除
+    db.execute(text("DELETE FROM transactions WHERE transaction_id = :tid"), {"tid": transaction_id})
+    db.commit()
+    return {"message": "交易紀錄已刪除"}
