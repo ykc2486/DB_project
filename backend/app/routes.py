@@ -472,26 +472,30 @@ def get_messages(other_user_id: int, db: Session = Depends(get_db), user_id: int
     ) for m in messages]
 
 @router.get("/conversations/", response_model=List[schemas.UserResponse])
+@router.get("/conversations/", response_model=List[schemas.ConversationResponse])
 def get_conversations(db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
-    # Get list of users the current user has exchanged messages with
+    # 修正 SQL：選取對話對象，並關聯該對話最後涉及的商品資訊
     query = text("""
-        SELECT DISTINCT u.* 
+        SELECT DISTINCT ON (u.user_id)
+            u.user_id, u.username, 
+            i.item_id, i.title as item_title,
+            img.image_data_name as item_image
         FROM users u
         JOIN messages m ON (u.user_id = m.sender_id OR u.user_id = m.receiver_id)
+        LEFT JOIN items i ON m.item_id = i.item_id
+        LEFT JOIN item_images img ON i.item_id = img.item_id
         WHERE (m.sender_id = :user_id OR m.receiver_id = :user_id)
           AND u.user_id != :user_id
     """)
-    users = db.execute(query, {"user_id": user_id}).fetchall()
+    rows = db.execute(query, {"user_id": user_id}).fetchall()
     
-    result = []
-    for u in users:
-        phones = db.execute(text("SELECT phone_number FROM phones WHERE user_id = :user_id"), {"user_id": u.user_id}).fetchall()
-        result.append(schemas.UserResponse(
-            user_id=u.user_id, username=u.username, email=u.email,
-            is_active=u.is_active, join_date=u.join_date,
-            address=u.address, phones=[p.phone_number for p in phones]
-        ))
-    return result
+    return [schemas.ConversationResponse(
+        user_id=r.user_id, 
+        username=r.username,
+        item_id=r.item_id,
+        item_title=r.item_title,
+        item_image=r.item_image
+    ) for r in rows]
 
 """
 -----------------------------

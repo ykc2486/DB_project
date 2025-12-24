@@ -154,3 +154,10 @@ class ItemUpdate(BaseModel):
     price: int = Field(0, ge=0)
     exchange_type: bool
     desired_item: Optional[str] = Field(None)
+
+class ConversationResponse(BaseModel):
+    user_id: int
+    username: str
+    item_id: Optional[int] = None
+    item_title: Optional[str] = None
+    item_image: Optional[str] = None
