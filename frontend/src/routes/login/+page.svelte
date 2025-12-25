@@ -59,7 +59,7 @@
 			<div class="rounded-md shadow-sm space-y-4">
 				<div>
 					<label for="username" class="sr-only">帳號</label>
-					<input bind:value={username} id="username" type="text" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="帳號 (Username)">
+					<input bind:value={username} id="username" type="text" required minlength="3" maxlength="24" class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="帳號 (Username)">
 				</div>
 
 				{#if !isLogin}
@@ -73,7 +73,7 @@
 
 				<div>
 					<label for="password" class="sr-only">密碼</label>
-					<input bind:value={password} id="password" type="password" required class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="密碼 (Password)">
+					<input bind:value={password} id="password" type="password" required minlength="8" class="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="密碼 (Password)">
 				</div>
 			</div>
 
