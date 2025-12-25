@@ -1,106 +1,86 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from .database import Base  
 
-class User(Base):
-    __tablename__ = "users"
-
-    user_id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, index=True, nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    address = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True)
-    join_date = Column(DateTime(timezone=True), server_default=func.now())
-
-    phones = relationship("Phone", back_populates="user")
-    items = relationship("Item", back_populates="owner")
-    wishlist = relationship("Wishlist", back_populates="user")
-
-class Phone(Base):
-    __tablename__ = "phones"
-
-    phone_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    phone_number = Column(String(20), nullable=False)
-
-    user = relationship("User", back_populates="phones")
-
-class Category(Base):
-    __tablename__ = "categories"
-
-    category_id = Column(Integer, primary_key=True, index=True)
-    category_name = Column(String(100), nullable=False)
-
-    items = relationship("Item", back_populates="category_rel")
-
-class Item(Base):
-    __tablename__ = "items"
-
-    item_id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(100), nullable=False)
-    description = Column(Text, nullable=True)
-    condition = Column(String(50), nullable=False)
-    owner_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    post_date = Column(DateTime(timezone=True), server_default=func.now())
-    price = Column(Integer, nullable=True)
-    exchange_type = Column(Boolean, default=False) # False=Sale, True=Exchange
-    status = Column(Boolean, default=True) # True=Available, False=Sold/Unavailable
-    desired_item = Column(String(100), nullable=True)
-    category = Column(Integer, ForeignKey("categories.category_id"), nullable=False)
-    total_images = Column(Integer, default=0)
-
-    owner = relationship("User", back_populates="items")
-    category_rel = relationship("Category", back_populates="items")
-    images = relationship("ItemImage", back_populates="item")
-
-class ItemImage(Base):
-    __tablename__ = "item_images"
-
-    image_id = Column(Integer, primary_key=True, index=True)
-    item_id = Column(Integer, ForeignKey("items.item_id"), nullable=False)
-    image_data_name = Column(String(255), nullable=False)
-
-    item = relationship("Item", back_populates="images")
-
-class Wishlist(Base):
-    __tablename__ = "wishlist"
-
-    wishlist_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    item_id = Column(Integer, ForeignKey("items.item_id"), nullable=False)
-    added_date = Column(DateTime(timezone=True), server_default=func.now())
-
-    user = relationship("User", back_populates="wishlist")
-    item = relationship("Item")
-
-class Transaction(Base):
-    __tablename__ = "transactions"
-
-    transaction_id = Column(Integer, primary_key=True, index=True)
-    item_id = Column(Integer, ForeignKey("items.item_id"), nullable=False)
-    buyer_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    seller_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    transaction_date = Column(DateTime(timezone=True), server_default=func.now())
-    status = Column(String(50), default="pending") # pending, completed, cancelled
-    completion_date = Column(DateTime(timezone=True), nullable=True)
-
-    item = relationship("Item")
-    buyer = relationship("User", foreign_keys=[buyer_id])
-    seller = relationship("User", foreign_keys=[seller_id])
-
-class Message(Base):
-    __tablename__ = "messages"
-
-    message_id = Column(Integer, primary_key=True, index=True)
-    sender_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    receiver_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    content = Column(Text, nullable=False)
-    sent_at = Column(DateTime(timezone=True), server_default=func.now())
-    is_read = Column(Boolean, default=False)
-    item_id = Column(Integer, ForeignKey("items.item_id"), nullable=True)
-
-    sender = relationship("User", foreign_keys=[sender_id])
-    receiver = relationship("User", foreign_keys=[receiver_id])
-    item = relationship("Item")
+CREATE_TABLE_STATEMENTS = [
+    """
+    CREATE TABLE IF NOT EXISTS users (
+        user_id SERIAL PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        email VARCHAR(100) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        address VARCHAR(255),
+        is_active BOOLEAN DEFAULT TRUE,
+        join_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_users_username ON users (username);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_users_email ON users (email);
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS phones (
+        phone_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(user_id),
+        phone_number VARCHAR(20) NOT NULL
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS categories (
+        category_id SERIAL PRIMARY KEY,
+        category_name VARCHAR(100) NOT NULL
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS items (
+        item_id SERIAL PRIMARY KEY,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        condition VARCHAR(50) NOT NULL,
+        owner_id INTEGER NOT NULL REFERENCES users(user_id),
+        post_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        price INTEGER,
+        exchange_type BOOLEAN DEFAULT FALSE,
+        status BOOLEAN DEFAULT TRUE,
+        desired_item VARCHAR(100),
+        category INTEGER NOT NULL REFERENCES categories(category_id),
+        total_images INTEGER DEFAULT 0
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS item_images (
+        image_id SERIAL PRIMARY KEY,
+        item_id INTEGER NOT NULL REFERENCES items(item_id),
+        image_data_name VARCHAR(255) NOT NULL
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS wishlist (
+        wishlist_id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(user_id),
+        item_id INTEGER NOT NULL REFERENCES items(item_id),
+        added_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS transactions (
+        transaction_id SERIAL PRIMARY KEY,
+        item_id INTEGER NOT NULL REFERENCES items(item_id),
+        buyer_id INTEGER NOT NULL REFERENCES users(user_id),
+        seller_id INTEGER NOT NULL REFERENCES users(user_id),
+        transaction_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'pending',
+        completion_date TIMESTAMP WITH TIME ZONE
+    );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS messages (
+        message_id SERIAL PRIMARY KEY,
+        sender_id INTEGER NOT NULL REFERENCES users(user_id),
+        receiver_id INTEGER NOT NULL REFERENCES users(user_id),
+        content TEXT NOT NULL,
+        sent_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        is_read BOOLEAN DEFAULT FALSE,
+        item_id INTEGER REFERENCES items(item_id)
+    );
+    """
+]

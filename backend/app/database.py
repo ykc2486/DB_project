@@ -2,9 +2,10 @@ import os
 import time
 from pathlib import Path
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
+from . import models
 
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
@@ -32,8 +33,6 @@ DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{DB_HOST}:{DB_
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
-
 def init_db():
     """
     initialize the database tables with retries.
@@ -42,7 +41,10 @@ def init_db():
     while retries > 0:
         try:
             print(f"Connecting to {DB_HOST}:{DB_PORT} to initialize database tables...")
-            Base.metadata.create_all(bind=engine)
+            with engine.connect() as connection:
+                for statement in models.CREATE_TABLE_STATEMENTS:
+                    connection.execute(text(statement))
+                connection.commit()
             print("Database tables initialized.")
             break
         except OperationalError as e:
