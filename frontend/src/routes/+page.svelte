@@ -1,6 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { authApi } from '$lib/api';
 	import { goto } from '$app/navigation';
+
+	onMount(() => {
+		const token = localStorage.getItem('token');
+		if (token) {
+			goto('/items');
+		}
+	});
 
 	let isLogin = true; // 切換登入或註冊
 	let username = '';

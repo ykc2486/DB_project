@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { messageApi } from '$lib/api';
 	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import {getFullImageUrl} from '$lib/api';
@@ -9,6 +10,11 @@
 	let loading = true;
 
 	onMount(async () => {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			goto('/login');
+			return;
+		}
 		try {
 			loading = true;
 			conversations = await messageApi.getConversations();

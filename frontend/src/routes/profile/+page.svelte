@@ -74,6 +74,7 @@
 				<button
 					on:click={() => goto('/items')}
 					class="mr-6 rounded-full p-2 transition-colors hover:bg-gray-200"
+					aria-label="Go to items"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"

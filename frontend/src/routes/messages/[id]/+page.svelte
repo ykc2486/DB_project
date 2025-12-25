@@ -20,6 +20,12 @@
 	const itemId = parts.length > 1 ? parseInt(parts[1]) : null;
 
 	onMount(async () => {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			goto('/login');
+			return;
+		}
+
 		// 核心檢查：如果沒有 itemId 或解析失敗，顯示錯誤
 		if (!itemId || isNaN(itemId) || isNaN(otherUserId)) {
 			error = '無效的商品對話連結，請從商品頁面重新點擊「聯絡賣家」。';

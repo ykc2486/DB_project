@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { transactionApi } from '$lib/api';
 
 	let transactions: any[] = [];
@@ -7,7 +8,14 @@
 	let loading = true;
 	let filterStatus = 'all'; // 篩選狀態
 
-	onMount(fetchTransactions);
+	onMount(() => {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			goto('/login');
+			return;
+		}
+		fetchTransactions();
+	});
 
 	async function fetchTransactions() {
 		try {
