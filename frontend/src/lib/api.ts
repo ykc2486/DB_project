@@ -26,7 +26,7 @@ export const authApi = {
         });
         if (!response.ok) {
             const error = await response.json();
-            if (response.status === 422) {
+            if (response.status === 500) {
                 throw new Error('輸入資料格式錯誤，或帳號/Email已被使用');
             }
             throw new Error(error.detail || '註冊失敗');

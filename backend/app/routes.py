@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, File, Uploa
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from argon2 import PasswordHasher
 from datetime import datetime
@@ -24,34 +25,57 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
 @router.post("/users/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
-    # Check if email exists
-    if db.execute(text("SELECT 1 FROM users WHERE email = :email"), {"email": user.email}).fetchone():
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
     ph = PasswordHasher()
     password_hash = ph.hash(user.password)
     
-    # Insert user
-    query = text("""
-        INSERT INTO users (username, email, password_hash, address, is_active, join_date)
-        VALUES (:username, :email, :password_hash, :address, true, now())
-        RETURNING user_id
-    """)
-    result = db.execute(query, {
-        "username": user.username,
-        "email": user.email,
-        "password_hash": password_hash,
-        "address": user.address
-    }).fetchone()
-    
-    new_user_id = result.user_id
-    db.commit()
-    
-    if user.phones:
-        for p in user.phones:
-            db.execute(text("INSERT INTO phones (user_id, phone_number) VALUES (:user_id, :phone_number)"), 
-                       {"user_id": new_user_id, "phone_number": p})
+    try:
+        query = text("""
+            INSERT INTO users (username, email, password_hash, address, is_active, join_date)
+            VALUES (:username, :email, :password_hash, :address, true, now())
+            RETURNING user_id
+        """)
+        
+        result = db.execute(query, {
+            "username": user.username,
+            "email": user.email,
+            "password_hash": password_hash,
+            "address": user.address
+        })
+        
+        row = result.fetchone()
+        new_user_id = row.user_id
+
+        if user.phones:
+            for p in user.phones:
+                db.execute(
+                    text("INSERT INTO phones (user_id, phone_number) VALUES (:user_id, :phone_number)"), 
+                    {"user_id": new_user_id, "phone_number": p}
+                )
+        
         db.commit()
+        
+    except IntegrityError as e:
+        db.rollback()
+        
+        error_detail = str(e.orig)
+        message = "Data integrity error"
+        
+        if "ix_users_username" in error_detail:
+            message = f"username: '{user.username}' has already been registered"
+        elif "ix_users_email" in error_detail:
+            message = f"email: '{user.email}' has already been registered"
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=message
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
     return read_user(new_user_id, db)
 
 @router.get("/users/me", response_model=schemas.UserResponse)
