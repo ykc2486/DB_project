@@ -238,6 +238,8 @@ def get_image(filename: str):
 @router.post("/wishlist/", response_model=schemas.WishlistResponse)
 def add_to_wishlist(wish_in: schemas.WishlistCreate, db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
     # Insert Wishlist
+    if query := db.execute(text("SELECT 1 FROM wishlist WHERE user_id = :user_id AND item_id = :item_id"), {"user_id": user_id, "item_id": wish_in.item_id}).fetchone():
+        raise HTTPException(status_code=400, detail="Item already in wishlist")
     query = text("""
         INSERT INTO wishlist (user_id, item_id, added_date)
         VALUES (:user_id, :item_id, now())

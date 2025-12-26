@@ -120,7 +120,7 @@ export const itemApi = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ item_id: itemId })
         });
-        if (!response.ok) throw new Error('加入收藏失敗');
+        if (!response.ok) throw new Error('加入收藏失敗，該商品已在收藏清單中');
         return response.json();
     },
 
@@ -161,6 +161,7 @@ export const userApi = {
     },
     // --- 新增更新方法 ---
     async updateProfile(profileData: any) {
+        console.log('正在呼叫 updateProfile (POST)...');
         const token = localStorage.getItem('token');
         
         const formData = new URLSearchParams();
