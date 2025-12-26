@@ -613,24 +613,29 @@ def delete_transaction(
     db.commit()
     return {"message": "交易紀錄已刪除"}
 
-@router.put("/users/me", response_model=schemas.UserResponse)
+@router.post("/users/me", response_model=schemas.UserResponse)
 def update_current_user(
     email: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     phones: Optional[List[str]] = Form(None),
     db: Session = Depends(get_db), 
-    user_id: int = Depends(verify_token),
-    token: str = Depends(verify_token)
+    user_id: int = Depends(verify_token) # 只需要這一個驗證
 ):
-    
+    # 確保 user_id 存在
+    if not user_id:
+        raise HTTPException(status_code=401, detail="驗證失敗")
+
     if email:
-        db.execute(text("UPDATE users SET email = :email WHERE user_id = :user_id"), {"email": email, "user_id": user_id})  
+        db.execute(text("UPDATE users SET email = :email WHERE user_id = :id"), {"email": email, "id": user_id})  
     if address:
-        db.execute(text("UPDATE users SET address = :address WHERE user_id = :user_id"), {"address": address, "user_id": user_id})
+        db.execute(text("UPDATE users SET address = :address WHERE user_id = :id"), {"address": address, "id": user_id})
+    
     if phones is not None:
-        db.execute(text("DELETE FROM phones WHERE user_id = :user_id"), {"user_id": user_id})
+        db.execute(text("DELETE FROM phones WHERE user_id = :id"), {"id": user_id})
         for p in phones:
-            db.execute(text("INSERT INTO phones (user_id, phone_number) VALUES (:user_id, :phone_number)"), 
-                       {"user_id": user_id, "phone_number": p})
+            db.execute(text("INSERT INTO phones (user_id, phone_number) VALUES (:id, :num)"), 
+                       {"id": user_id, "num": p})
+    
     db.commit()
+    # 呼叫 read_user 取得最新資料回傳
     return read_user(user_id, db)

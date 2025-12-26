@@ -171,7 +171,7 @@ export const userApi = {
         }
 
         const response = await fetch(`${BASE_URL}/users/me?token=${token}`, {
-            method: 'PUT',
+            method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: formData
         });
