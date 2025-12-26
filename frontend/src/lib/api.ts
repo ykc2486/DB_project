@@ -19,11 +19,17 @@ export const getFullImageUrl = (imagePath: string) => {
 
 export const authApi = {
     async register(userData: any) {
-        const response = await fetch(`${BASE_URL}/users/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData),
-        });
+        let response;
+        try {
+            response = await fetch(`${BASE_URL}/users/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData),
+            });
+        } catch (error) {
+            throw new Error('輸入資料格式錯誤，或帳號/Email已被使用');
+        }
+
         if (!response.ok) {
             const error = await response.json();
             if (response.status === 500) {
