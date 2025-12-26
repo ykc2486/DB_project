@@ -162,10 +162,18 @@ export const userApi = {
     // --- 新增更新方法 ---
     async updateProfile(profileData: any) {
         const token = localStorage.getItem('token');
+        
+        const formData = new URLSearchParams();
+        if (profileData.email) formData.append('email', profileData.email);
+        if (profileData.address) formData.append('address', profileData.address);
+        if (profileData.phones && Array.isArray(profileData.phones)) {
+            profileData.phones.forEach((p: string) => formData.append('phones', p));
+        }
+
         const response = await fetch(`${BASE_URL}/users/me?token=${token}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(profileData)
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
         });
         if (!response.ok) throw new Error('更新個人檔案失敗');
         return response.json();

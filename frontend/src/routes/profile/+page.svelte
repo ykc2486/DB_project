@@ -165,12 +165,13 @@
 						<h2 class="mb-6 text-2xl font-black">修改個人資料</h2>
 						<div>
 							<label for="edit-username" class="mb-2 block text-sm font-bold text-gray-400"
-								>使用者名稱</label
+								>使用者名稱 (不可修改)</label
 							>
 							<input
 								id="edit-username"
-								bind:value={editData.username}
-								class="w-full rounded-2xl border bg-gray-50 p-4 outline-none focus:bg-white"
+								value={editData.username}
+								disabled
+								class="w-full rounded-2xl border bg-gray-100 p-4 text-gray-500 outline-none cursor-not-allowed"
 							/>
 						</div>
 						<div>

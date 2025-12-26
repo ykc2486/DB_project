@@ -612,3 +612,25 @@ def delete_transaction(
     db.execute(text("DELETE FROM transactions WHERE transaction_id = :tid"), {"tid": transaction_id})
     db.commit()
     return {"message": "交易紀錄已刪除"}
+
+@router.put("/users/me", response_model=schemas.UserResponse)
+def update_current_user(
+    email: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    phones: Optional[List[str]] = Form(None),
+    db: Session = Depends(get_db), 
+    user_id: int = Depends(verify_token),
+    token: str = Depends(verify_token)
+):
+    
+    if email:
+        db.execute(text("UPDATE users SET email = :email WHERE user_id = :user_id"), {"email": email, "user_id": user_id})  
+    if address:
+        db.execute(text("UPDATE users SET address = :address WHERE user_id = :user_id"), {"address": address, "user_id": user_id})
+    if phones is not None:
+        db.execute(text("DELETE FROM phones WHERE user_id = :user_id"), {"user_id": user_id})
+        for p in phones:
+            db.execute(text("INSERT INTO phones (user_id, phone_number) VALUES (:user_id, :phone_number)"), 
+                       {"user_id": user_id, "phone_number": p})
+    db.commit()
+    return read_user(user_id, db)
