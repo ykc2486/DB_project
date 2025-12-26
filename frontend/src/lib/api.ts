@@ -41,7 +41,7 @@ export const authApi = {
             payload = Object.fromEntries(loginData.entries());
         }
 
-        console.log("🚀 API 準備發送的 JSON 字串:", JSON.stringify(payload));
+        console.log("API 準備發送的 JSON 字串:", JSON.stringify(payload));
 
         const response = await fetch(`${BASE_URL}/login`, {
             method: 'POST',
