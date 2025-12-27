@@ -96,7 +96,7 @@ A database is essential to maintain data persistence (user accounts, item detail
 
 ### Schema Changes from Milestone 2:
 
-#### 1. remove `category` table
+#### 1. Modified `category` table
 **Table:** `categories`
 
 **Change Type:** `Modified`
