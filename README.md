@@ -251,4 +251,6 @@ The application connects to the database using **FastAPI** and **SQLAlchemy**.
 2.  **Session Management**: We implemented a `get_db()` dependency function that yields a database session (`SessionLocal`) for each HTTP request. This ensures that each request has its own isolated transaction scope and the connection is properly closed after the request is processed.
 3.  **Execution**: Although we use SQLAlchemy for connection management, we strictly use `db.execute(text("SQL..."))` to run the raw SQL queries listed above, bypassing the ORM layer to demonstrate direct SQL usage.
 
-### 5.5
+### 5.5 Deployment
+We deployed our frontend Svelte application on **Cloudflare Pages**, accessible at `db.trashcode.dev`. The backend is hosted on a **Raspberry Pi** located in a dormitory. To expose the backend to the public internet and bypass NAT restrictions, we utilized **Cloudflare Tunnel**, making the API accessible at `db_api.trashcode.dev`. We chose to use distinct subdomains for the frontend and backend instead of path-based routing to fully leverage **Cloudflare's CDN** capabilities for improved load times and performance.
+
