@@ -162,16 +162,19 @@ Our application uses **Raw SQL** via SQLAlchemy's `text()` construct for all dat
 #### User Management
 *   **Create User**:
     ```sql
+    -- Insert core user data
     INSERT INTO users (username, email, password_hash, address, is_active, join_date)
     VALUES (:username, :email, :password_hash, :address, true, now())
     RETURNING user_id
     ```
 *   **Get User Profile**:
     ```sql
+    -- Fetch basic info
     SELECT * FROM users WHERE user_id = :user_id
     ```
 *   **Update User**:
     ```sql
+    -- Update core attributes
     UPDATE users SET email = :email WHERE user_id = :id
     UPDATE users SET address = :address WHERE user_id = :id
     ```
@@ -179,12 +182,14 @@ Our application uses **Raw SQL** via SQLAlchemy's `text()` construct for all dat
 #### Item Operations
 *   **List Items (with Search & Sort)**:
     ```sql
+    -- Market feed with dynamic filtering and ordering
     SELECT * FROM items WHERE status = true 
     AND (title LIKE :search OR description LIKE :search)
     ORDER BY price ASC  -- or DESC, or post_date
     ```
 *   **Create Item**:
     ```sql
+    -- Insert item and record its post_date
     INSERT INTO items (title, description, condition, owner_id, price, exchange_type, status, desired_item, category, total_images, post_date)
     VALUES (:title, :description, :condition, :owner_id, :price, :exchange_type, true, :desired_item, :category, :total_images, now())
     RETURNING item_id, post_date
@@ -226,6 +231,7 @@ Our application uses **Raw SQL** via SQLAlchemy's `text()` construct for all dat
 #### Messaging
 *   **Get Conversation List**:
     ```sql
+    -- Fetch unique chat partners with their latest item context
     SELECT DISTINCT ON (u.user_id)
         u.user_id, u.username, 
         i.item_id, i.title as item_title,
