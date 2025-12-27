@@ -25,6 +25,9 @@ CREATE_TABLE_STATEMENTS = [
     );
     """,
     """
+    CREATE INDEX IF NOT EXISTS ix_phones_user_id ON phones (user_id);
+    """,
+    """
     CREATE TABLE IF NOT EXISTS categories (
         category_id SERIAL PRIMARY KEY,
         category_name VARCHAR(100) NOT NULL
@@ -47,11 +50,26 @@ CREATE_TABLE_STATEMENTS = [
     );
     """,
     """
+    CREATE INDEX IF NOT EXISTS ix_items_owner_id ON items (owner_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_items_category ON items (category);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_items_price ON items (price);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_items_post_date ON items (post_date);
+    """,
+    """
     CREATE TABLE IF NOT EXISTS item_images (
         image_id SERIAL PRIMARY KEY,
         item_id INTEGER NOT NULL REFERENCES items(item_id),
         image_data_name VARCHAR(255) NOT NULL
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_item_images_item_id ON item_images (item_id);
     """,
     """
     CREATE TABLE IF NOT EXISTS wishlist (
@@ -60,6 +78,12 @@ CREATE_TABLE_STATEMENTS = [
         item_id INTEGER NOT NULL REFERENCES items(item_id),
         added_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_wishlist_user_id ON wishlist (user_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_wishlist_item_id ON wishlist (item_id);
     """,
     """
     CREATE TABLE IF NOT EXISTS transactions (
@@ -73,6 +97,18 @@ CREATE_TABLE_STATEMENTS = [
     );
     """,
     """
+    CREATE INDEX IF NOT EXISTS ix_transactions_item_id ON transactions (item_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_transactions_buyer_id ON transactions (buyer_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_transactions_seller_id ON transactions (seller_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_transactions_transaction_date ON transactions (transaction_date);
+    """,
+    """
     CREATE TABLE IF NOT EXISTS messages (
         message_id SERIAL PRIMARY KEY,
         sender_id INTEGER NOT NULL REFERENCES users(user_id),
@@ -82,5 +118,17 @@ CREATE_TABLE_STATEMENTS = [
         is_read BOOLEAN DEFAULT FALSE,
         item_id INTEGER REFERENCES items(item_id)
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_sender_id ON messages (sender_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_receiver_id ON messages (receiver_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_item_id ON messages (item_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS ix_messages_sent_at ON messages (sent_at);
     """
 ]
