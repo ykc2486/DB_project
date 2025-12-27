@@ -151,7 +151,7 @@ The primary target users are **University Students** who want to trade second-ha
 ### 5.2 Functionalities
 1.  **User Authentication**: Register, Login, and Profile Management (update address, phone).
 2.  **Marketplace**: Browse items, Search by keyword, Filter by category, Sort by price/date.
-3.  **Item Management**: Post new items with images, Edit item details(Only text can be updated), Delete items.
+3.  **Item Management**: Post new items with images, Edit item details, Delete items.
 4.  **Transaction System**: Initiate purchase requests, View transaction history, Update transaction status (Pending -> Completed).
 5.  **Messaging**: Send and receive messages related to specific items/transactions.
 6.  **Wishlist**: Add/Remove items from a personal wishlist.
