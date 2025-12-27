@@ -99,9 +99,9 @@ A database is essential to maintain data persistence (user accounts, item detail
 #### 1. remove `category` table
 **Table:** `categories`
 
-**Change Type:** `Remove`
+**Change Type:** `Modified`
 
-**Rationale:** Because the categories with parent-child relationships may lead to violate the BCNF, so we decided to remove the table directly.
+**Rationale:** Transitioned to a dynamic enumeration logic to reduce operational friction. Missing categories are now automatically handled by the backend during item creation, ensuring referential integrity and BCNF compliance without administrative overhead.
 
 #### 2. change `item_images` table
 **Table:** `item_images`
