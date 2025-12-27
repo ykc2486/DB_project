@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { userApi } from '$lib/api';
+	import { userApi, getFullImageUrl } from '$lib/api';
 	import { goto } from '$app/navigation';
 
 	let user: any = null;
+	let myItems: any[] = [];
 	let loading = true;
 	let error = '';
 
@@ -25,6 +26,7 @@
 		try {
 			loading = true;
 			user = await userApi.getProfile();
+			myItems = await userApi.getMyItems();
 			// 初始化編輯資料
 			editData = {
 				username: user.username,
@@ -231,6 +233,45 @@
 						>
 							確認更新
 						</button>
+					</div>
+				{/if}
+			</div>
+
+			<div class="mt-12">
+				<h2 class="mb-6 text-2xl font-black text-gray-900">我的商品</h2>
+				{#if myItems.length === 0}
+					<p class="text-gray-500">目前沒有上架任何商品。</p>
+				{:else}
+					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+						{#each myItems as item}
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y-no-static-element-interactions -->
+							<div 
+								class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md cursor-pointer" 
+								on:click={() => goto(`/items/${item.item_id}`)}
+							>
+								<div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
+									{#if item.images && item.images.length > 0}
+										<img
+											src={getFullImageUrl(item.images[0])}
+											alt={item.title}
+											class="h-48 w-full object-cover object-center"
+										/>
+									{:else}
+										<div class="flex h-48 w-full items-center justify-center bg-gray-100 text-gray-400">
+											無圖片
+										</div>
+									{/if}
+								</div>
+								<div class="p-4">
+									<h3 class="text-lg font-bold text-gray-900">{item.title}</h3>
+									<p class="mt-1 text-sm text-gray-500">{item.condition}</p>
+									<p class="mt-2 font-bold text-blue-600">
+										{item.exchange_type ? '交換' : `$${item.price}`}
+									</p>
+								</div>
+							</div>
+						{/each}
 					</div>
 				{/if}
 			</div>

@@ -159,6 +159,13 @@ export const userApi = {
         if (!response.ok) throw new Error('無法取得使用者資料');
         return response.json();
     },
+
+    async getMyItems() {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${BASE_URL}/users/me/items?token=${token}`);
+        if (!response.ok) throw new Error('無法取得我的商品');
+        return response.json();
+    },
     // --- 新增更新方法 ---
     async updateProfile(profileData: any) {
         console.log('正在呼叫 updateProfile (POST)...');

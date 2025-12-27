@@ -82,6 +82,22 @@ def create_user(user: schemas.createUser, db: Session = Depends(get_db)):
 def read_current_user(db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
     return read_user(user_id, db)
 
+@router.get("/users/me/items", response_model=List[schemas.ItemResponse])
+def read_my_items(db: Session = Depends(get_db), user_id: int = Depends(verify_token)):
+    items = db.execute(text("SELECT * FROM items WHERE owner_id = :user_id ORDER BY post_date DESC"), {"user_id": user_id}).fetchall()
+    result = []
+    for i in items:
+        imgs = db.execute(text("SELECT image_data_name FROM item_images WHERE item_id = :item_id"), 
+                          {"item_id": i.item_id}).fetchall()
+        result.append(schemas.ItemResponse(
+            item_id=i.item_id, title=i.title, description=i.description,
+            condition=i.condition, owner_id=i.owner_id, post_date=i.post_date,
+            price=i.price, exchange_type=i.exchange_type, status=i.status,
+            desired_item=i.desired_item, total_images=i.total_images,
+            category=i.category, images=[img.image_data_name for img in imgs]
+        ))
+    return result
+
 @router.get("/users/{user_id}", response_model=schemas.UserResponse)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     db_user = db.execute(text("SELECT * FROM users WHERE user_id = :user_id"), {"user_id": user_id}).fetchone()
