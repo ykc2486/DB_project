@@ -1,4 +1,4 @@
-# Final Project - A C2C Second-hand Trading Platform Database
+<img width="2750" height="1373" alt="Gemini_Generated_Image_aq7ut0aq7ut0aq7u" src="https://github.com/user-attachments/assets/1ac93e1b-e7ec-4203-8068-52f5d8958541" /># Final Project - A C2C Second-hand Trading Platform Database
 
 Our code base repository: **https://github.com/ykc2486/DB_project/**
 
@@ -473,3 +473,4 @@ The application connects to the database using **FastAPI** and **SQLAlchemy**.
 ### 6.5 Deployment
 We deployed our frontend Svelte application on **Cloudflare Pages**, accessible at `db.trashcode.dev`. The backend is hosted on a **Raspberry Pi** located in a dormitory. To expose the backend to the public internet and bypass NAT restrictions, we utilized **Cloudflare Tunnel**, making the API accessible at `db_api.trashcode.dev`. We chose to use distinct subdomains for the frontend and backend instead of path-based routing to fully leverage **Cloudflare's CDN** capabilities for improved load times and performance.
 
+<img width="2750" height="1373" alt="Gemini_Generated_Image_aq7ut0aq7ut0aq7u" src="https://github.com/user-attachments/assets/cf53c5e3-e4a0-48f1-83e2-9dfe699e918a" />
