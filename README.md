@@ -1,4 +1,4 @@
-<img width="2750" height="1373" alt="Gemini_Generated_Image_aq7ut0aq7ut0aq7u" src="https://github.com/user-attachments/assets/1ac93e1b-e7ec-4203-8068-52f5d8958541" /># Final Project - A C2C Second-hand Trading Platform Database
+# Final Project - A C2C Second-hand Trading Platform Database
 
 Our code base repository: **https://github.com/ykc2486/DB_project/**
 
