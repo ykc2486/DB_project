@@ -1,5 +1,9 @@
 # Final Project - A C2C Second-hand Trading Platform Database
 
+Our code base repository: **https://github.com/ykc2486/DB_project/**
+
+Our frontend: **https://db.trashcode.dev/**
+
 ## 0. Team Information
 ### Team 2
 | Name | Student ID | Department/Year |
