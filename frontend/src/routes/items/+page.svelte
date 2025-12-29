@@ -116,6 +116,10 @@
 			alert('出售商品請填寫有效價格');
 			return;
 		}
+		if (!exchangeType && price !== null && price > 1000000) {
+			alert('價格不能超過 1,000,000');
+			return;
+		}
 
 		uploadLoading = true;
 		try {
@@ -255,6 +259,7 @@
 							<input
 								id="price"
 								type="number"
+								max="1000000"
 								bind:value={price}
 								class="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 font-bold text-blue-600 outline-none"
 							/>
